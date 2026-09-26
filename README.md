@@ -4,8 +4,21 @@ Publishing pipeline for "Everything you can do to help win an election".
 
 The source of truth is a public Google Doc. `publish.py` downloads it, splits it into
 pages, and writes a static site into `public/`, which Firebase Hosting serves
-(`whatcanido-election`). The generated files in `public/` are committed, because the
-GitHub Actions workflows deploy the repo contents directly.
+(`whatcanido-election`).
+
+`public/` is generated and **not** committed. GitHub Actions rebuilds it from the Doc
+and deploys:
+
+* push to `main` → build and deploy to the live channel, so template and code changes
+  publish themselves;
+* **Run workflow** on the "Deploy to Firebase Hosting on merge" action → same thing with
+  no commit, which is how to publish a Doc edit on its own;
+* pull request → build and deploy to a preview channel, so a template change can be
+  looked at before merging.
+
+Note that a code-only push publishes the Doc as it reads at that moment: the two inputs
+aren't pinned to each other. If a build fails, the deploy step doesn't run and the
+previous release stays up.
 
 ## Setup
 
@@ -23,7 +36,8 @@ python3 -m venv .venv
 .venv/bin/python publish.py --cache doc.html --refetch   # refresh that cache
 ```
 
-Preview locally with `python3 -m http.server -d public 8000`.
+Preview locally with `python3 -m http.server -d public 8000`. `--deploy` goes straight
+to the live channel from your machine, bypassing CI.
 
 ## Markers in the document
 

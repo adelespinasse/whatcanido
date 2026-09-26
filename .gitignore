@@ -71,3 +71,6 @@ node_modules/
 # publish.py
 .venv/
 doc.html
+
+# Generated site: built from the Google Doc by publish.py, deployed by CI
+/public/
