@@ -136,6 +136,44 @@ hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
 .toc li { margin: 0.25rem 0; }
 .toc-pages > li > a { font-weight: 600; }
 
+/* Footnotes */
+sup {
+  line-height: 0;   /* a marker shouldn't stretch its line */
+  font-size: 0.7em;
+}
+sup a {
+  text-decoration: none;
+  padding: 0 0.15em;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 600;
+  cursor: help;     /* the note text is in the title tooltip */
+}
+sup a:hover, sup a:focus { text-decoration: underline; }
+
+.footnotes {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.footnotes-title {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+.footnotes ol { padding-left: 1.75rem; }
+.footnotes li { margin-bottom: 0.6rem; }
+/* A footnote jumped to from the text gets a moment of highlight. */
+.footnotes li:target {
+  background: var(--accent-bg);
+  outline: 0.4rem solid var(--accent-bg);
+  border-radius: 2px;
+}
+.footnote-back { text-decoration: none; margin-left: 0.25rem; }
+
 /* Page-level nav between sections */
 .pager {
   display: flex;

@@ -63,12 +63,22 @@ start marker with no end marker is an error.
 Adjust `FRONT_TOC_MAX_LEVEL`, `SECTION_TOC_LEVELS`, the markers, and `DOC_ID` at the
 top of `publish.py`.
 
+## Footnotes and comments
+
+Doc comments are stripped, inline refs and text both. Footnotes are kept: each one is
+moved to the bottom of the page that cites it, under a "Notes" heading, and its
+reference becomes a superscript link whose `title` shows the note text on hover.
+Numbers are not reassigned — they stay as they are in the Doc, so the first note on a
+page is usually not 1. A footnote cited from two pages appears on both. A reference with
+no text, or a note nothing refers to, is reported as a warning.
+
 ## Why HTML and not Markdown
 
 Google Docs' Markdown export drops heading anchor ids while still exporting internal
 links as `#heading=h.xxxx`, which makes those links impossible to resolve. The HTML
 export keeps both halves. It does include comments (inline `[a]` references plus a
-block at the end) — `publish.py` strips them. Suggested edits are not exported.
+block at the end) and footnotes — `publish.py` strips the former and relocates the
+latter. Suggested edits are not exported.
 
 ## Chrome
 

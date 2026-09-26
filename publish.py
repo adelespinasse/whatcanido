@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime
 import os
 import re
@@ -86,6 +87,15 @@ def inline_text(el: Tag) -> str:
     right: the first invents spaces inside words, the second deletes the real ones.
     """
     text = el.get_text("").replace("\u00a0", " ")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def inline_text_from_nodes(nodes: list) -> str:
+    """Readable plain text for a list of detached inline nodes (footnote tooltips)."""
+    parts = []
+    for node in nodes:
+        parts.append(node if isinstance(node, NavigableString) else node.get_text(""))
+    text = "".join(str(part) for part in parts).replace("\u00a0", " ")
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -166,23 +176,25 @@ def parse_style_classes(soup: BeautifulSoup) -> dict[str, set[str]]:
 
 
 def strip_comments(soup: BeautifulSoup) -> int:
-    """Remove Google Docs comments: the [a]-style inline refs and the trailing blocks.
+    """Remove Google Docs comments: the trailing blocks and the inline [a] refs.
 
-    Comments really are present in the HTML export, and one of them sits inside a
-    heading, so this has to happen before any heading text is read.
+    Comments really are present in the HTML export, and one of them has sat inside a
+    heading, so this has to happen before any heading text is read.  The blocks go
+    first: each one is found by its own back-link (<a href="#cmnt_ref1" id="cmnt1">),
+    which the inline-ref pass below would otherwise delete out from under us, leaving
+    the comment text stranded at the end of the last page.
     """
     removed = 0
-    for anchor in soup.find_all("a", href=True):
-        if re.match(r"^#cmnt", anchor["href"]):
-            target = anchor.find_parent("sup") or anchor
-            target.decompose()
-            removed += 1
     for anchor in soup.find_all("a", id=True):
         if re.match(r"^cmnt\d+$", anchor["id"]):
             block = anchor.find_parent("div") or anchor.find_parent("p") or anchor
             block.decompose()
             removed += 1
-    # Footnote-style leftovers: a trailing <hr> introduced above the comment list.
+    for anchor in soup.find_all("a", href=True):
+        if re.match(r"^#cmnt", anchor["href"]):
+            target = anchor.find_parent("sup") or anchor
+            target.decompose()
+            removed += 1
     return removed
 
 
@@ -298,6 +310,105 @@ def remove_header_block(children: list[Tag]) -> list[Tag]:
 
 
 # ---------------------------------------------------------------------------
+# Footnotes
+# ---------------------------------------------------------------------------
+
+# Google exports a footnote as an inline <sup><a href="#ftnt1" id="ftnt_ref1">[1]</a></sup>
+# plus a <div> at the end of the document holding the text.  Splitting the document
+# would leave every footnote on the last page, so the text is pulled out here and
+# re-attached to whichever page actually cites it.  Numbers are never reassigned: they
+# have to keep matching the numbers an editor sees in the Doc, so the first footnote on
+# a page is usually not number 1.
+
+
+def extract_footnotes(body: Tag) -> dict[int, list]:
+    """Detach the footnote blocks, returning {number: content nodes}."""
+    notes: dict[int, list] = {}
+    separator = None
+    for anchor in body.find_all("a", id=True):
+        match = re.match(r"^ftnt(\d+)$", anchor["id"])
+        if not match:
+            continue
+        number = int(match.group(1))
+        block = anchor.find_parent("div") or anchor.find_parent("p")
+        if block is None:
+            continue
+        if separator is None:
+            # Google puts an <hr> above the footnote list; note it before the block is
+            # detached, because an extracted block has no siblings left to look at.
+            previous = block.find_previous_sibling()
+            if previous is not None and previous.name == "hr":
+                separator = previous
+        anchor.decompose()  # the "[1]" back-link; a fresh one is built per page
+        block.extract()
+        inner = block.find("p") or block
+        contents = [c for c in inner.contents]
+        # Google puts a non-breaking space between the number and the text.
+        while contents and isinstance(contents[0], NavigableString) and not contents[0].strip():
+            contents.pop(0)
+        notes[number] = contents
+    if separator is not None:
+        separator.decompose()
+    if notes:
+        log(f"extracted {len(notes)} footnotes")
+    return notes
+
+
+def attach_footnotes(soup: BeautifulSoup, pages: list[Page], notes: dict[int, list]) -> None:
+    """Point each footnote reference at its own page and list the notes at the bottom."""
+    placed: set[int] = set()
+    for page in pages:
+        order: list[int] = []
+        seen: dict[int, int] = {}
+        for node in page.nodes:
+            for anchor in node.find_all("a", href=True):
+                match = re.match(r"^#ftnt(\d+)$", anchor["href"])
+                if not match:
+                    continue
+                number = int(match.group(1))
+                if number not in notes:
+                    warn(f"footnote [{number}] is referenced but has no text")
+                    continue
+                seen[number] = seen.get(number, 0) + 1
+                anchor["href"] = f"#fn{number}"
+                anchor["id"] = f"fnref{number}" if seen[number] == 1 else f"fnref{number}-{seen[number]}"
+                # Native tooltip, so the note is readable without leaving the paragraph.
+                anchor["title"] = inline_text_from_nodes(notes[number])
+                anchor.string = str(number)
+                if number not in order:
+                    order.append(number)
+        if not order:
+            continue
+        section = soup.new_tag("section")
+        section["class"] = "footnotes"
+        heading = soup.new_tag("h2")
+        heading["class"] = "footnotes-title"
+        heading.string = "Notes"
+        section.append(heading)
+        listing = soup.new_tag("ol")
+        for number in order:
+            item = soup.new_tag("li")
+            item["id"] = f"fn{number}"
+            item["value"] = str(number)  # keeps the Doc's numbering
+            # Copy: appending a node moves it, which would empty the note out of any
+            # other page that cites the same footnote.
+            for child in notes[number]:
+                item.append(copy.copy(child))
+            back = soup.new_tag("a", href=f"#fnref{number}")
+            back["class"] = "footnote-back"
+            back["title"] = "back to the text"
+            back.string = "\u21a9"
+            item.append(" ")
+            item.append(back)
+            listing.append(item)
+            placed.add(number)
+        section.append(listing)
+        page.nodes.append(section)
+    for number in sorted(set(notes) - placed):
+        warn(f"footnote [{number}] has text but is never referenced; dropped")
+
+
+# ---------------------------------------------------------------------------
 # Page model
 # ---------------------------------------------------------------------------
 
@@ -352,6 +463,12 @@ def assign_anchors(pages: list[Page]) -> dict[str, tuple[Page, str]]:
                 google_id = element.get("id")
                 if not is_heading and not google_id:
                     continue
+                # Footnote ids (fn3, fnref3) are ours already; don't reslug them.
+                if google_id and re.match(r"^fn(ref)?\d", google_id):
+                    continue
+                # The per-page "Notes" heading is chrome, not part of the outline.
+                if "footnotes-title" in (element.get("class") or []):
+                    continue
                 if is_heading:
                     text = inline_text(element)
                     base = slugify(text, "heading")
@@ -380,6 +497,8 @@ def fix_internal_links(pages: list[Page], id_map: dict[str, tuple[Page, str]]) -
                 href = anchor["href"]
                 if not href.startswith("#"):
                     continue
+                if re.match(r"^#fn(ref)?\d", href):
+                    continue  # already a per-page footnote link
                 # Markdown-style targets in case a link was pasted by hand.
                 target = href[1:]
                 if target.startswith("heading=") or target.startswith("bookmark="):
@@ -567,6 +686,8 @@ def build(html: str, out_dir: str) -> list[Page]:
     clean_attrs(soup)
     drop_empty_blocks(body)
 
+    notes = extract_footnotes(body)
+
     children = [c for c in body.children if isinstance(c, Tag)]
     children = remove_header_block(children)
 
@@ -583,6 +704,8 @@ def build(html: str, out_dir: str) -> list[Page]:
 
     pages = split_pages(children, site_title)
     log(f"split into {len(pages)} pages (front page + {len(pages) - 1} sections)")
+
+    attach_footnotes(soup, pages, notes)
 
     id_map = assign_anchors(pages)
     if title_google_id:
