@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page_title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<!-- TBD: real header content (logo? tagline? nav?) -->
+<header class="site-header">
+  <div class="wrap">
+    <a class="site-title" href="/">{{site_title}}</a>
+    <nav class="site-nav"><a href="/">Contents</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+{{breadcrumb}}
+{{content}}
+</main>
+
+<!-- TBD: real footer content (license? contact? feedback link?) -->
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Source: <a href="{{doc_url}}">the original Google&nbsp;Doc</a>. Corrections and additions welcome.</p>
+    <p class="generated">Generated {{generated}}.</p>
+  </div>
+</footer>
+</body>
+</html>
