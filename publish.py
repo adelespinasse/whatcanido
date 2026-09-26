@@ -49,6 +49,13 @@ TOC_MARKERS = ("<<<TOC>>>", "[TOC]")
 FRONT_TOC_MAX_LEVEL = 3          # h2 and h3 under each page link
 SECTION_TOC_LEVELS = (2, 5)      # h2 through h5
 
+# Hand-written pages: (output file, <h1>/<title>, fragment in site/).  Each fragment is
+# run through template processing too, so it can use {{doc_url}}.
+STATIC_PAGES = (
+    ("about.html", "About", "about.html"),
+    ("404.html", "Page not found", "404.html"),
+)
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE_DIR = os.path.join(ROOT, "site")
 OUT_DIR = os.path.join(ROOT, "public")
@@ -762,23 +769,32 @@ def build(html: str, out_dir: str) -> list[Page]:
             fh.write(out)
         log(f"wrote {page.filename}")
 
-    # 404 page, using the same chrome.
-    not_found = render(
-        template,
-        page_title=escape(f"Page not found — {site_title}"),
-        site_title=escape(site_title),
-        description="Page not found",
-        breadcrumb="",
-        content='<h1>Page not found</h1>\n<p>That page doesn’t exist. '
-        'Try the <a href="/">table of contents</a>.</p>',
-        doc_url=DOC_VIEW_URL,
-        generated=generated,
-    )
-    with open(os.path.join(out_dir, "404.html"), "w", encoding="utf-8") as fh:
-        fh.write(not_found)
+    for filename, title, fragment_name in STATIC_PAGES:
+        path = os.path.join(SITE_DIR, fragment_name)
+        if not os.path.exists(path):
+            warn(f"missing fragment site/{fragment_name}; skipping {filename}")
+            continue
+        with open(path, encoding="utf-8") as fh:
+            fragment = fh.read()
+        # The fragment is a template in its own right; fill it before embedding it, so
+        # its placeholders don't depend on the order the page's fields are substituted.
+        fragment = render(fragment, doc_url=DOC_VIEW_URL, generated=generated)
+        out = render(
+            template,
+            page_title=escape(f"{title} \u2014 {site_title}"),
+            site_title=escape(site_title),
+            description=escape(title),
+            breadcrumb="",
+            content=f"<h1>{escape(title)}</h1>\n{fragment}",
+            doc_url=DOC_VIEW_URL,
+            generated=generated,
+        )
+        with open(os.path.join(out_dir, filename), "w", encoding="utf-8") as fh:
+            fh.write(out)
+        log(f"wrote {filename}")
 
     shutil.copyfile(os.path.join(SITE_DIR, "style.css"), os.path.join(out_dir, "style.css"))
-    log("wrote 404.html and style.css")
+    log("wrote style.css")
     return pages
 
 

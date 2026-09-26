@@ -80,7 +80,11 @@ export keeps both halves. It does include comments (inline `[a]` references plus
 block at the end) and footnotes — `publish.py` strips the former and relocates the
 latter. Suggested edits are not exported.
 
-## Chrome
+## Chrome and hand-written pages
 
-`site/template.html` and `site/style.css` hold the page shell. The header and footer
-content is still a placeholder (marked `TBD` in the template).
+`site/template.html` and `site/style.css` hold the page shell.
+
+Pages that aren't in the Doc live in `site/` as body fragments and are listed in
+`STATIC_PAGES` in `publish.py` — currently `site/about.html` and `site/404.html`. Each
+fragment gets the `<h1>` and `<title>` named there, and is itself run through template
+processing, so it can use `{{doc_url}}`.
