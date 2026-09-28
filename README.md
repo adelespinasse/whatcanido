@@ -44,7 +44,7 @@ to the live channel from your machine, bypassing CI.
 | Marker | Effect |
 | --- | --- |
 | `<<<HEADER>>>` … `<<<END HEADER>>>` | Everything between them, inclusive, is dropped from the site. Put the status/TODO notes there. |
-| `<<<TOC>>>` or `[TOC]` | Replaced by the front-page table of contents. |
+| `<<<TOC>>>` | Replaced by the front-page table of contents. |
 
 Each marker must be the paragraph's whole text (`[TOC]` may sit in a paragraph of its
 own). If the header markers are missing the build warns and publishes everything; a
