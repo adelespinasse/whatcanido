@@ -1,10 +1,12 @@
 # whatcanido
 
-Publishing pipeline for "Everything you can do to help win an election".
+Publishing pipeline for the web site [Everything you can do to help win an
+election](https://wcid.aldel.com/).
 
-The source of truth is a public Google Doc. `publish.py` downloads it, splits it into
-pages, and writes a static site into `public/`, which Firebase Hosting serves
-(`whatcanido-election`).
+The source of truth is [this public Google
+Doc](https://docs.google.com/document/d/19rhgYc4RfUE-IcvCfwe0BVcHOl8mNF0JT4k8v-LZhE4/edit?tab=t.0).
+`publish.py` downloads it, splits it into pages, and writes a static site into
+`public/`, which Firebase Hosting serves (`whatcanido-election`).
 
 `public/` is generated and **not** committed. GitHub Actions rebuilds it from the Doc
 and deploys:
