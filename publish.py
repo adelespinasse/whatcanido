@@ -42,7 +42,7 @@ DOC_EXPORT_URL = f"https://docs.google.com/document/d/{DOC_ID}/export?format=htm
 # table of contents.  Matching ignores case and surrounding whitespace.
 HEADER_START_MARKERS = ("<<<HEADER>>>",)
 HEADER_END_MARKERS = ("<<<END HEADER>>>", "<<</HEADER>>>")
-TOC_MARKERS = ("<<<TOC>>>", "[TOC]")
+TOC_MARKERS = ("<<<TOC>>>",)
 
 # Front page lists every other page plus their headings down to this level;
 # each section page gets a TOC of its own headings in this range.
