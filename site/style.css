@@ -1,12 +1,13 @@
 /* Base palette: light by default, dark when the reader prefers it. */
 :root {
-  --bg: #fdfdfb;
+  --bg: #fff;
   --fg: #1c1c1a;
   --muted: #5d5d57;
   --rule: #e2e0d8;
   --accent: #1d5fa8;
   --accent-bg: #eef3fa;
-  --maxw: 44rem;
+  --maxw: 48rem;
+  --header-font: system-ui, -apple-system, "Segoe UI", Helvetica, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -27,7 +28,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 1.0625rem/1.65 Charter, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  font: 1.0625rem/1.55 Charter, "Iowan Old Style", Georgia, "Times New Roman", serif;
 }
 
 .wrap {
@@ -36,40 +37,46 @@ body {
   padding: 0 1.25rem;
 }
 
+@media (max-width: 35rem) {
+  .wrap { padding: 0 0.6rem; }
+}
+
 /* Header / footer */
 .site-header {
   border-bottom: 1px solid var(--rule);
-  background: var(--bg);
+  background: #f4f4f4;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .site-header .wrap {
+  font-family: var(--header-font);
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
 }
 .site-title {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   text-decoration: none;
-  color: var(--fg);
+  color: #667;
 }
 .site-nav {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-size: 0.85rem;
 }
+.site-nav a { padding: 0 0.2em;}
 
 .site-footer {
   margin-top: 4rem;
   border-top: 1px solid var(--rule);
   padding: 1.5rem 0 3rem;
   color: var(--muted);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-size: 0.85rem;
 }
 .site-footer p { margin: 0.4rem 0; }
@@ -78,7 +85,7 @@ main { padding-bottom: 1rem; }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: system-ui, -apple-system, "Segoe UI", Helvetica, sans-serif;
+  font-family: var(--header-font);
   line-height: 1.25;
   margin: 2.2rem 0 0.6rem;
   scroll-margin-top: 4.5rem;
@@ -87,7 +94,8 @@ h1 { font-size: 1.9rem; margin-top: 2rem; margin-bottom: 2rem; }
 h2 { font-size: 1.4rem; }
 h3 { font-size: 1.15rem; }
 h4, h5, h6 { font-size: 1rem; }
-h1:first-child { margin-top: 1.6rem; }
+/* I.e. on the front page there's no "return to front" link, so we want more space at the top */
+h1:first-child { margin-top: 4rem; margin-bottom: 3rem; }
 
 p, ul, ol { margin: 0 0 1rem; }
 ul, ol { padding-left: 1.5rem; }
@@ -109,7 +117,7 @@ hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
 
 /* Breadcrumb ("back to contents") */
 .breadcrumb {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-size: 0.85rem;
   margin: 1.25rem 0 0;
 }
@@ -121,7 +129,7 @@ hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
   background: var(--accent-bg);
   border: 1px solid var(--rule);
   border-radius: 6px;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-size: 0.95rem;
 }
 .toc > .toc-title {
@@ -144,7 +152,7 @@ sup {
 sup a {
   text-decoration: none;
   padding: 0 0.15em;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-weight: 600;
   cursor: help;     /* the note text is in the title tooltip */
 }
@@ -183,7 +191,7 @@ sup a:hover, sup a:focus { text-decoration: underline; }
   margin-top: 3rem;
   padding-top: 1rem;
   border-top: 1px solid var(--rule);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--header-font);
   font-size: 0.9rem;
 }
 
