@@ -793,7 +793,10 @@ def build(html: str, out_dir: str) -> list[Page]:
             fh.write(out)
         log(f"wrote {filename}")
 
+    # TODO: These should be in a list like STATIC_PAGES, or maybe just copy all
+    # the files in site/ that aren't special in some way.
     shutil.copyfile(os.path.join(SITE_DIR, "style.css"), os.path.join(out_dir, "style.css"))
+    shutil.copyfile(os.path.join(SITE_DIR, "bluedot.png"), os.path.join(out_dir, "bluedot.png"))
     log("wrote style.css")
     return pages
 
